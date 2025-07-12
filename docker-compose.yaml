@@ -1,0 +1,30 @@
+version: "3.11"
+
+services:
+  mongo:
+    image: mongo:6
+    container_name: mymongo
+    ports:
+      - "27017:27017" # 호스트와 컨테이너 포트 매핑
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+      MONGO_INITDB_DATABASE: memo_db  # (선택) 최초 생성할 데이터베이스
+    volumes:
+      - mongo-data:/data/db # 데이터 영속화
+
+  web:
+    build: .
+    container_name: myfastapi
+    command: sh -c "uvicorn app.main:app --reload --port=8000 --host=0.0.0.0"
+    ports:
+      - "8000:8000" # FastAPI 서비스 포트
+    environment:
+      - MONGO_URI=mongodb://root:example@mongo:27017/memo_db?authSource=admin
+    depends_on:
+      - mongo
+    volumes:
+      - .:/app # 코드 핫리로드 및 개발 편의
+
+volumes:
+  mongo-data:
